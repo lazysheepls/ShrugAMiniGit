@@ -1,0 +1,59 @@
+#!/bin/dash
+
+#init
+branch="master"
+
+# error: shrug repository does not exist
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-show: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
+#errors
+#TODO: 2041 shrug-show a.txt
+#shrug-show: error: invalid object a.txt
+#TODO: 2041 shrug-show 4:a.txt
+#shrug-show: error: unknown commit '4'
+#TODO: 2041 shrug-show 1:c.txt
+#shrug-show: error: 'c.txt' not found in commit 1
+#TODO: 2041 shrug-show
+#usage: shrug-show <commit>:<filename>
+#TODO: 2041 shrug-show 0 b.txt
+#usage: shrug-show <commit>:<filename>
+
+#not error
+# condition: say I have not make any commit yet, only added a.txt and b.txt into the index folder
+#TODO: 2041 shrug-show :b.txt
+# 1
+# 2
+# 3
+# 4
+# 5
+#TODO: 2041 shrug-show 0:b.txt
+# shrug-show: error: unknown commit '0'
+
+# condition: say I have made 1 commit, then made more changes to a.txt
+#TODO: 2041 shrug-show 0:a.txt
+# 1
+# 2
+# 3
+# 4
+# 5
+#TODO: seq 1 3 >> a.txt
+#TODO: 2041 shrug-add a.txt
+#TODO: 2041 shrug-show :a.txt
+# 1
+# 2
+# 3
+# 4
+# 5
+# 1
+# 2
+# 3
+#TODO: 2041 shrug-show 0:a.txt
+# 1
+# 2
+# 3
+# 4
+# 5
