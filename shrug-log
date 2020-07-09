@@ -16,4 +16,9 @@ fi
 
 # print log in the reversed chronological order (most recent at the top)
 log_file=".shrug/repo/shrug.log"
-tac $log_file
+temp_log_print_file=".shrug/repo/log_print.temp"
+
+cut -d" " --complement -f2 $log_file > $temp_log_print_file # remove branch name from each line
+
+tac $temp_log_print_file
+rm $temp_log_print_file
