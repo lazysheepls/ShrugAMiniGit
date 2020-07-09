@@ -24,5 +24,8 @@ mkdir ".shrug/index"
 # Create the sub repo folder
 mkdir ".shrug/repo"
 
+# Create the sub sub master folder(default branch)
+mkdir ".shrug/repo/master"
+
 # Create log file in the sub repo folder
 touch ".shrug/repo/shrug.log"

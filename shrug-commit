@@ -1,25 +1,73 @@
 #!/bin/dash
-
+#TODO: option a is not handled
+# init
 is_format_valid="false"
+is_option_a_selected="false"
+index_folder=".shrug/index"
+log_file=".shrug/repo/shrug.log"
+commit_number=0
+commit_message=""
+commit_branch="master"
 
-# Check command format
-if [ $# -eq 3 ] && [ $2 = "-m" ]
+# Check input format
+if [ $# -eq 2 ] && [ $1 = "-m" ] #shrug-commit -m commit-message
 then
     is_format_valid="true"
-elif [ $# -eq 4 ] && [ $2 = "-a" ] && [ $3 = "-m" ]
+    commit_message=$2
+elif [ $# -eq 3 ] && [ $1 = "-a" ] && [ $2 = "-m" ] #shrug-commit -a -m commit-message
 then
     is_format_valid="true"
+    is_option_a_selected="true"
+    commit_message=$3
 fi
 
+# Report error if format is wrong
 if [ $is_format_valid = "false" ]
 then
     echo "usage: shrug-commit [-a] -m commit-message"
     exit 1
 fi
 
-echo "no error"
+# Get current commit number
+if [ ! -s $log_file ] # log is empty, this is the first commit
+then
+    commit_number=0
+else
+    commit_number=`cat $log_file | tail -n1 | cut -d" " -f1`
+    commit_number=$(($commit_number + 1))
+fi
 
-# error usage: when -a or -m does not macth
-# error usage: when no commit message
+# Compare index folder files with last commit repo folder files
+if [ $commit_number -gt 0 ] # skip this check if it is the 1st commit
+then
+    last_commit_number=$(($commit_number - 1))
+    last_commit_folder=".shrug/repo/$commit_branch/$last_commit_number"
+    is_newer_index_file_detected="false"
 
-# message when index is up to date: nothing to commit
+    for file in `ls $index_folder`
+    do
+        if [ "$index_folder/$file" -nt "$last_commit_folder/$file" ]
+        then
+            is_newer_index_file_detected="true"
+        fi
+    done
+
+    # Report "nothing to commit" when index files are the same as the last commit
+    if [ $is_newer_index_file_detected = "false" ]
+    then
+        echo "nothing to commit"
+        exit 0
+    fi
+fi
+
+# Add entry to log (default master branch)
+echo "$commit_number $commit_branch $commit_message" >> $log_file
+
+# Copy index files to the new commit folder in repo
+new_commit_folder=".shrug/repo/$commit_branch/$commit_number"
+mkdir $new_commit_folder
+cp -ar "$index_folder/." "$new_commit_folder/."
+
+# Commit message to UI
+echo "Committed as commit $commit_number"
+
