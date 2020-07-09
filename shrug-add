@@ -1,6 +1,13 @@
 #!/bin/dash
 
-# print usage info when there is no arguements
+# error: shrug repository does not exist
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-add: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
+# error: missing arguements
 if [ $# -eq 0 ]
 then
     echo "usage: shrug-add <filenames>"
@@ -10,7 +17,7 @@ fi
 # loop through <filenames>
 for file in $@
 do
-    # report error: invalid file name
+    # error: invalid file name
     echo $file | grep -P -q "^[a-zA-Z0-9]+[.|-|_]"
     if [ $? -ne 0 ]
     then
@@ -18,7 +25,7 @@ do
         exit 1
     fi
 
-    # report error: file does not exit
+    # error: file does not exist
     if [ ! -e $file ]
     then
         echo "shrug-add: error: can not open '$file'"

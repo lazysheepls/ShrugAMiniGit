@@ -9,7 +9,14 @@ commit_number=0
 commit_message=""
 commit_branch="master"
 
-# Check input format
+# error: shrug repository does not exist
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-commit: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
+# check input format
 if [ $# -eq 2 ] && [ $1 = "-m" ] #shrug-commit -m commit-message
 then
     is_format_valid="true"
@@ -21,7 +28,7 @@ then
     commit_message=$3
 fi
 
-# Report error if format is wrong
+# error: input format is wrong
 if [ $is_format_valid = "false" ]
 then
     echo "usage: shrug-commit [-a] -m commit-message"
@@ -52,7 +59,7 @@ then
         fi
     done
 
-    # Report "nothing to commit" when index files are the same as the last commit
+    # exit 0: report "nothing to commit" when index files are the same as the last commit
     if [ $is_newer_index_file_detected = "false" ]
     then
         echo "nothing to commit"
@@ -60,14 +67,14 @@ then
     fi
 fi
 
-# Add entry to log (default master branch)
+# add entry to log (default master branch)
 echo "$commit_number $commit_branch $commit_message" >> $log_file
 
-# Copy index files to the new commit folder in repo
+# copy index files to the new commit folder in repo
 new_commit_folder=".shrug/repo/$commit_branch/$commit_number"
 mkdir $new_commit_folder
 cp -ar "$index_folder/." "$new_commit_folder/."
 
-# Commit message to UI
+# commit message to UI
 echo "Committed as commit $commit_number"
 

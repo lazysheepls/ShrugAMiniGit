@@ -1,31 +1,31 @@
 #!/bin/dash
 
-# print usage info when there is some arguements
+# error: number of arguement is not 0
 if [ $# -ne 0 ]
 then
     echo "usage: shrug-init"
     exit 1
 fi
 
-# Check if .shrug folder exist
+# error: .shrug folder already exist
 if [ -e ".shrug" ]
 then
     echo "shrug-init: error: .shrug already exists"
     exit 1
 fi
 
-# Create .shrug folder
+# create .shrug folder
 echo "Initialized empty shrug repository in .shrug"
 mkdir ".shrug"
 
-# Create the sub index folder
+# create the sub index folder
 mkdir ".shrug/index"
 
-# Create the sub repo folder
+# create the sub repo folder
 mkdir ".shrug/repo"
 
-# Create the sub sub master folder(default branch)
+# create the sub sub master folder(default branch)
 mkdir ".shrug/repo/master"
 
-# Create log file in the sub repo folder
+# create log file in the sub repo folder
 touch ".shrug/repo/shrug.log"

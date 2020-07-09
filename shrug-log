@@ -1,0 +1,19 @@
+#!/bin/dash
+
+# error: shrug repository does not exist
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-log: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
+# error: number of arguement is not 0
+if [ $# -gt 0 ]
+then
+    echo "usage: shrug-log"
+    exit 1
+fi
+
+# print log in the reversed chronological order (most recent at the top)
+log_file=".shrug/repo/shrug.log"
+tac $log_file
