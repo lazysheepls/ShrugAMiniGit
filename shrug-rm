@@ -2,6 +2,9 @@
 is_format_valid="false"
 is_option_force_selected="false"
 is_option_cached_selected="false"
+last_commit_number=0
+commit_branch="master"
+last_commit_folder=""
 log_file=".shrug/repo/shrug.log"
 index_folder=".shrug/index"
 temp_rm_print_file=".shrug/repo/rm_print.temp"
@@ -128,11 +131,18 @@ then
             exit 1
         fi
     done
+
+    # remove file from index folder
+    for file in $files
+    do
+        rm "$index_folder/$file"
+    done
 fi
 
 # [] or [--force] option: remove from both current directory and index folder
-if [ is_option_cached_selected != "false" -o is_option_force_selected = "true" ]
+if [ $is_option_cached_selected = "false" -o $is_option_force_selected = "true" ]
 then
+
     # error: all files must exist in both current directory and index, otherwise exit and do not delete any file
     for file in $files
     do
@@ -142,6 +152,36 @@ then
             exit 1
         fi
     done
+
+    # [] option: check if file in current direcory is different from the one in index, otherwise exit and do not delete any file
+    if [ $is_option_force_selected = "false" ]
+    then
+        for file in $files
+        do
+            # check 1: compare index file with last commit (cannot have staged but uncommitted files)
+            last_commit_number=`cat $log_file | tail -n1 | cut -d" " -f1`
+            last_commit_folder=".shrug/repo/$commit_branch/$last_commit_number"
+            if ! cmp -s "$index_folder/$file" "$last_commit_folder/$file"
+            then
+                echo "shrug-rm: error: '$file' has changes staged in the index"
+                exit 1
+            fi
+
+            # chcek 2: compare content of each file (cannot have diff files in cur dir and index )
+            if ! cmp -s "$file" "$index_folder/$file"
+            then
+                echo "shrug-rm: error: '$file' in repository is different to working file"
+                exit 1
+            fi
+        done
+
+        # remove file from both index and current directory
+        for file in $files
+        do
+            rm "$file"
+            rm "$index_folder/$file"
+        done
+    fi
 fi
 
 #TODO:
@@ -222,6 +262,18 @@ fi
 
 # shrug-rm --force b
 # b is removed from current dir and index (no message)
+
+#TODO:(changes staged in index that not yet committed)
+# shrug-init
+# Initialized empty shrug repository in .shrug
+# touch a b c
+# shrug-add a b c
+# shrug-commit -m "first commit"
+# Committed as commit 0
+# echo a >> a
+# shrug-add a
+# shrug-rm a
+# shrug-rm: error: 'a' has changes staged in the index
 
 #TODO: (when --force --cached are both present, always use --force)
 # shrug-init
