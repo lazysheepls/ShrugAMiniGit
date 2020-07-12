@@ -132,6 +132,33 @@ then
         fi
     done
 
+    # check if file in current direcory is different from the one in index, otherwise exit and do not delete any file
+    for file in $files
+    do
+        is_diff_to_last_commit="false"
+        is_diff_to_cur_dir="false"
+
+        # check 1: compare index file with last commit (cannot have staged but uncommitted files)
+        last_commit_number=`cat $log_file | tail -n1 | cut -d" " -f1`
+        last_commit_folder=".shrug/repo/$commit_branch/$last_commit_number"
+        if ! cmp -s "$index_folder/$file" "$last_commit_folder/$file"
+        then
+            is_diff_to_last_commit="true"
+        fi
+
+        # chcek 2: compare content of each file (cannot have diff files in cur dir and index )
+        if ! cmp -s "$file" "$index_folder/$file"
+        then
+            is_diff_to_cur_dir="true"
+        fi
+
+        if [ $is_diff_to_cur_dir = "true" -a $is_diff_to_last_commit = "true" ]
+        then
+            echo "shrug-rm: error: '$file' in index is different to both working file and repository"
+            exit 1
+        fi
+    done
+
     # remove file from index folder
     for file in $files
     do
@@ -158,132 +185,47 @@ then
     then
         for file in $files
         do
+            is_diff_to_last_commit="false"
+            is_diff_to_cur_dir="false"
+
             # check 1: compare index file with last commit (cannot have staged but uncommitted files)
             last_commit_number=`cat $log_file | tail -n1 | cut -d" " -f1`
             last_commit_folder=".shrug/repo/$commit_branch/$last_commit_number"
             if ! cmp -s "$index_folder/$file" "$last_commit_folder/$file"
             then
-                echo "shrug-rm: error: '$file' has changes staged in the index"
-                exit 1
+                is_diff_to_last_commit="true"
             fi
 
             # chcek 2: compare content of each file (cannot have diff files in cur dir and index )
             if ! cmp -s "$file" "$index_folder/$file"
             then
+                is_diff_to_cur_dir="true"
+            fi
+
+            if [ $is_diff_to_cur_dir = "true" -a $is_diff_to_last_commit = "false" ]
+            then
                 echo "shrug-rm: error: '$file' in repository is different to working file"
                 exit 1
             fi
-        done
 
-        # remove file from both index and current directory
-        for file in $files
-        do
-            rm "$file"
-            rm "$index_folder/$file"
+            if [ $is_diff_to_cur_dir = "false" -a $is_diff_to_last_commit = "true" ]
+            then
+                echo "shrug-rm: error: '$file' has changes staged in the index"
+                exit 1
+            fi
+
+            if [ $is_diff_to_cur_dir = "true" -a $is_diff_to_last_commit = "true" ]
+            then
+                echo "shrug-rm: error: '$file' in index is different to both working file and repository"
+                exit 1
+            fi
         done
     fi
+
+    # remove file from both index and current directory
+    for file in $files
+    do
+        rm "$file"
+        rm "$index_folder/$file"
+    done
 fi
-
-#TODO:
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-add a b c
-# shrug-commit -a -m "first commit"
-# shrug-rm a
-# a is removed from both current dir and index (no message)
-# shrug-rm a
-# shrug-rm: error: 'a' is not in the shrug repository
-
-#TODO:
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-add a b c
-# shrug-commit -a -m "first commit"
-# shrug-rm --cached b
-# b is removed from index only (no message)
-# shrug-rm --cached b
-# shrug-rm: error: 'b' is not in the shrug repository
-
-#TODO:
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-add a b c
-# shrug-commit -a -m "first commit"
-# shrug-rm --cached b
-# b is removed from index only (no message)
-# shrug-rm --cached a b c
-# shrug-rm: error: 'b' is not in the shrug repository (no file is removed)
-
-#TODO:(the operated files in current dir and index are the same, then shrug-rm --force behaves like shrug-rm)
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-add a b c
-# shrug-commit -a -m "first commit"
-# shrug-rm --force b
-# b is removed from both current dir and index (no message)
-
-#TODO:(handle duplicated file name, no issue)
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-add a b c
-# shrug-commit -a -m "first commit"
-# shrug-rm a a a a a a
-# a is removed from both current dir and index (no message)
-
-#TODO:(handle duplicated file name, no issue)
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-add a b c
-# shrug-commit -a -m "first commit"
-# shrug-rm a b c a b c
-# a b c are removed from both current dir and index (no message)
-
-#TODO:(the operated files in the current dir is different from the one in index, then only shrug-rm would report error, shrug-rm --force would not)
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# touch a b c
-# shrug-add a b c
-# shrug-commit -m "first commit"
-# Committed as commit 0
-# echo a > a
-# echo b > b
-# echo c > c
-# shrug-rm a
-# shrug-rm: error: 'a' in repository is different to working file
-
-# shrug-rm --cached a
-# a is removed from index (no message)
-
-# shrug-rm --force a (a exist in current but not in index)
-# shrug-rm: error: 'a' is not in the shrug repository
-
-# shrug-rm b
-# shrug-rm: error: 'b' in repository is different to working file
-
-# shrug-rm --force b
-# b is removed from current dir and index (no message)
-
-#TODO:(changes staged in index that not yet committed)
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# touch a b c
-# shrug-add a b c
-# shrug-commit -m "first commit"
-# Committed as commit 0
-# echo a >> a
-# shrug-add a
-# shrug-rm a
-# shrug-rm: error: 'a' has changes staged in the index
-
-#TODO: (when --force --cached are both present, always use --force)
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# touch a b c
-# shrug-add a b c
-# shrug-commit -m "first commit"
-# Committed as commit 0
-# shrug-rm --force --cached a
-# a is removed from both current dir and index (no message)
-
-# shrug-rm --cached --force b
-# b is removed from both current dir and index (no message)
