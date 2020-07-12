@@ -35,7 +35,7 @@ fi
 commit_number=`echo $1 | cut -d":" -f1`
 file=`echo $1 | cut -d":" -f2`
 
-if [ -z $commit_number ]
+if [ -z "$commit_number" ]
 then
     folder=".shrug/index"
     is_in_index_folder="true"

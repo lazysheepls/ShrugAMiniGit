@@ -8,7 +8,7 @@ then
 fi
 
 # error: repository does not have any commits yet
-if [ -z `cat ".shrug/repo/shrug.log"` ]
+if [ -z "`cat .shrug/repo/shrug.log`" ]
 then
     echo "shrug-log: error: your repository does not have any commits yet"
     exit 1

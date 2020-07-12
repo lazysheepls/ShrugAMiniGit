@@ -1,5 +1,5 @@
 #!/bin/dash
-#TODO: option a is not handled
+
 # init
 is_format_valid="false"
 is_option_a_selected="false"
@@ -53,6 +53,13 @@ then
     done
 fi
 
+# exit 0: index folder is empty, nothing to commit
+if [ -z "`ls $index_folder`" ]
+then
+    echo "nothing to commit"
+    exit 0
+fi
+
 # compare index folder files with last commit repo folder files
 if [ $commit_number -gt 0 ] # skip this check if it is the 1st commit
 then
@@ -62,10 +69,11 @@ then
 
     for file in `ls $index_folder`
     do
-        # compare cotnent of each file
+        # compare content of each file
         if ! cmp -s "$index_folder/$file" "$last_commit_folder/$file"
         then
             is_newer_index_file_detected="true"
+            break
         fi
         
     done
@@ -88,30 +96,3 @@ cp -ar "$index_folder/." "$new_commit_folder/."
 
 # commit message to UI
 echo "Committed as commit $commit_number"
-
-#TODO:
-# condition: empty folder
-# echo 1 > a
-# echo a > b
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-commit -a -m "initial commit"
-# nothing to commit
-
-#TODO:
-# condition: empty folder
-# echo 1 > a
-# echo a > b
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-add a b
-# shrug-commit -a -m "first commit"
-# Committed as commit 0
-
-# shrug-commit -a -m "second commit"
-# nothing to commit
-
-# echo q > c
-# shrug-add c
-# shrug-commit -a -m "second commit"
-# Committed as commit 1
