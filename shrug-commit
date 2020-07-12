@@ -53,10 +53,12 @@ then
 
     for file in `ls $index_folder`
     do
-        if [ "$index_folder/$file" -nt "$last_commit_folder/$file" ]
+        # compare cotnent of each file
+        if ! cmp -s "$index_folder/$file" "$last_commit_folder/$file"
         then
             is_newer_index_file_detected="true"
         fi
+        
     done
 
     # exit 0: report "nothing to commit" when index files are the same as the last commit

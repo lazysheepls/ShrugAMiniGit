@@ -44,7 +44,7 @@ else
 fi
 
 # error: invalid file name format
-echo $file | grep -P -q "^[a-zA-Z0-9]+[.|-|_]"
+echo $file | grep -P -q "^[a-zA-Z0-9]+[.|-|_]*"
 if [ $? -ne 0 ]
 then
     echo "shrug-show: error: invalid filename '$file'"

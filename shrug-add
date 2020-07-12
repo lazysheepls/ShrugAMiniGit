@@ -18,7 +18,7 @@ fi
 for file in $@
 do
     # error: invalid file name
-    echo $file | grep -P -q "^[a-zA-Z0-9]+[.|-|_]"
+    echo $file | grep -P -q "^[a-zA-Z0-9]+[.|-|_]*"
     if [ $? -ne 0 ]
     then
         echo "shrug-add: error: invalid filename '$file'"
