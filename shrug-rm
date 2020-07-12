@@ -4,6 +4,7 @@ is_option_force_selected="false"
 is_option_cached_selected="false"
 log_file=".shrug/repo/shrug.log"
 index_folder=".shrug/index"
+temp_rm_print_file=".shrug/repo/rm_print.temp"
 file_name_pattern="^[a-zA-Z0-9]+[.|-|_]*"
 files=$@
 
@@ -107,6 +108,14 @@ do
     fi
 done
 
+# remove duplicated file names
+for file in $files
+do
+    echo $file >> $temp_rm_print_file
+done
+files=`sort $temp_rm_print_file | uniq`
+rm $temp_rm_print_file
+
 # [--cached] option: only remove files in the index folder
 if [ $is_option_cached_selected = "true" ]
 then
@@ -172,6 +181,22 @@ fi
 # shrug-commit -a -m "first commit"
 # shrug-rm --force b
 # b is removed from both current dir and index (no message)
+
+#TODO:(handle duplicated file name, no issue)
+# shrug-init
+# Initialized empty shrug repository in .shrug
+# shrug-add a b c
+# shrug-commit -a -m "first commit"
+# shrug-rm a a a a a a
+# a is removed from both current dir and index (no message)
+
+#TODO:(handle duplicated file name, no issue)
+# shrug-init
+# Initialized empty shrug repository in .shrug
+# shrug-add a b c
+# shrug-commit -a -m "first commit"
+# shrug-rm a b c a b c
+# a b c are removed from both current dir and index (no message)
 
 #TODO:(the operated files in the current dir is different from the one in index, then only shrug-rm would report error, shrug-rm --force would not)
 # shrug-init
