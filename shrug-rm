@@ -1,21 +1,139 @@
 #!/bin/dash
+is_format_valid="false"
+is_option_force_selected="false"
+is_option_cached_selected="false"
+log_file=".shrug/repo/shrug.log"
+index_folder=".shrug/index"
+file_name_pattern="^[a-zA-Z0-9]+[.|-|_]*"
+files=$@
 
-#TODO:
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-add a b c
-# shrug-rm a
-# shrug-rm: error: your repository does not have any commits yet (this fault is above all)
+# error: shrug repository does not exist
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-rm: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
 
-#TODO:
-# shrug-init
-# Initialized empty shrug repository in .shrug
-# shrug-add a b c
-# shrug-commit -a -m "first commit"
-# shrug-rm
-# usage: shrug-rm [--force] [--cached] <filenames>
-# shrug-rm --force
-# usage: shrug-rm [--force] [--cached] <filenames>
+# error: no commit exist
+if [ -z "`cat $log_file`" ]
+then
+    echo "shrug-rm: error: your repository does not have any commits yet"
+    exit 1
+fi
+
+# input format check
+# Shrug-rm files ($# >= 1)
+if [ $# -ge 1 -a $is_format_valid = "false" ]
+then
+    if [ $1 != "--force" -a $1 != "--cached" ]
+    then
+        is_format_valid="true"
+    fi
+fi
+
+# Shrug-rm --cached files ($# >= 2)
+# Shrug-rm --force files ($# >= 2)
+if [ $# -ge 2 -a $is_format_valid = "false" ]
+then
+    if [ $1 = "--cached" -a $2 != "--force" ]
+    then  
+        is_format_valid="true"
+        is_option_cached_selected="true"
+    fi
+
+    if [ $1 = "--force" -a $2 != "--cached" ]
+    then
+        is_format_valid="true"
+        is_option_force_selected="true"
+    fi
+    
+    if [ $is_format_valid = "true" ]
+    then
+        shift 1
+        files=$@
+    fi
+fi
+
+# Shrug-rm --force --cached files ($# >= 3)
+# Shrug-rm --cached --force files ($# >= 3)
+if [ $# -ge 3 -a $is_format_valid = "false" ]
+then
+    if [ $1 = "--force" -a $2 = "--cached" ]
+    then
+        is_format_valid="true"
+        is_option_force_selected="true"
+    fi
+
+    if [ $1 = "--cached" -a $2 = "--force" ]
+    then
+        is_format_valid="true"
+        is_option_force_selected="true"
+    fi
+
+    if [ $is_format_valid = "true" ]
+    then
+        shift 2
+        files=$@
+    fi
+fi
+
+# check if there is any commands in the files listed in the arguements
+for file in $files
+do
+    echo $file | grep -P -q "^-+"
+    if [ $? -eq 0 ] # match pattern found
+    then
+        is_format_valid="false"
+        break
+    fi
+done
+
+# error: input format is wrong
+if [ $is_format_valid = "false" ]
+then
+    echo "usage: shrug-rm [--force] [--cached] <filenames>"
+    exit 1
+fi
+
+# error: invalid file name
+for file in $files
+do
+    # error: invalid file name
+    echo $file | grep -P -q "^[a-zA-Z0-9]+[.|-|_]*"
+    if [ $? -ne 0 ]
+    then
+        echo "shrug-rm: error: invalid filename '$file'"
+        exit 1
+    fi
+done
+
+# [--cached] option: only remove files in the index folder
+if [ $is_option_cached_selected = "true" ]
+then
+    # error: all files must exist in index, otherwise exit and o not delete any file
+    for file in $files
+    do
+        if [ ! -e "$index_folder/$file" ]
+        then
+            echo "shrug-rm: error: '$file' is not in the shrug repository"
+            exit 1
+        fi
+    done
+fi
+
+# [] or [--force] option: remove from both current directory and index folder
+if [ is_option_cached_selected != "false" -o is_option_force_selected = "true" ]
+then
+    # error: all files must exist in both current directory and index, otherwise exit and do not delete any file
+    for file in $files
+    do
+        if [ ! -e "$file" -o ! -e "$index_folder/$file" ]
+        then
+            echo "shrug-rm: error: '$file' is not in the shrug repository"
+            exit 1
+        fi
+    done
+fi
 
 #TODO:
 # shrug-init
@@ -36,6 +154,16 @@
 # b is removed from index only (no message)
 # shrug-rm --cached b
 # shrug-rm: error: 'b' is not in the shrug repository
+
+#TODO:
+# shrug-init
+# Initialized empty shrug repository in .shrug
+# shrug-add a b c
+# shrug-commit -a -m "first commit"
+# shrug-rm --cached b
+# b is removed from index only (no message)
+# shrug-rm --cached a b c
+# shrug-rm: error: 'b' is not in the shrug repository (no file is removed)
 
 #TODO:(the operated files in current dir and index are the same, then shrug-rm --force behaves like shrug-rm)
 # shrug-init
