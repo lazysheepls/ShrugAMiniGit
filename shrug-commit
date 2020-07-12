@@ -66,7 +66,17 @@ then
     last_commit_number=$(($commit_number - 1))
     last_commit_folder=".shrug/repo/$commit_branch/$last_commit_number"
     is_newer_index_file_detected="false"
+    is_number_of_file_changed="false"
 
+    # check if new file is added or removed
+    number_of_files_in_index=`ls $index_folder | wc -l`
+    number_of_files_in_last_commit=`ls $last_commit_folder | wc -l`
+    if [ $number_of_files_in_index -ne $number_of_files_in_last_commit ]
+    then
+        is_number_of_file_changed="true"
+    fi
+
+    # check if any of the index file content has been updated
     for file in `ls $index_folder`
     do
         # compare content of each file
@@ -75,11 +85,10 @@ then
             is_newer_index_file_detected="true"
             break
         fi
-        
     done
 
     # exit 0: report "nothing to commit" when index files are the same as the last commit
-    if [ $is_newer_index_file_detected = "false" ]
+    if [ $is_newer_index_file_detected = "false" -a $is_number_of_file_changed = "false" ]
     then
         echo "nothing to commit"
         exit 0
@@ -101,3 +110,5 @@ echo "Committed as commit $commit_number"
 # touch a b c
 # shrug-add a b a c b
 # a b c added to index with no error (no message)
+# shrug-commit a b a c b
+# Commited as commit 0 (no error)

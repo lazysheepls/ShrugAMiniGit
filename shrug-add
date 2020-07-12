@@ -1,5 +1,8 @@
 #!/bin/dash
 
+# init
+index_folder=".shrug/index"
+
 # error: shrug repository does not exist
 if [ ! -e ".shrug" ]
 then
@@ -26,11 +29,22 @@ do
     fi
 
     # error: file does not exist
-    if [ ! -e $file ]
+    if [ ! -e $file -a ! -e "$index_folder/$file" ]
     then
         echo "shrug-add: error: can not open '$file'"
         exit 1
     fi
 
-    cp $file ".shrug/index"
+    # rm file from index if it no-longer exist in current directory
+    if [ ! -e $file -a -e "$index_folder/$file" ]
+    then
+        rm "$index_folder/$file"
+    else # add file to index
+        cp $file $index_folder
+    fi
 done
+
+#TODO:(handle duplicated input arguments)
+# touch a b c
+# shrug-add a b a c b
+# a b c added to index with no error (no message)
