@@ -7,6 +7,13 @@ then
     exit 1
 fi
 
+# error: repository does not have any commits yet
+if [ -z `cat ".shrug/repo/shrug.log"` ]
+then
+    echo "shrug-log: error: your repository does not have any commits yet"
+    exit 1
+fi
+
 # error: number of arguement is not 0
 if [ $# -gt 0 ]
 then

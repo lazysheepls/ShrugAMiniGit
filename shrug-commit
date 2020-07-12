@@ -44,7 +44,16 @@ else
     commit_number=$(($commit_number + 1))
 fi
 
-# Compare index folder files with last commit repo folder files
+# option [-a] copy file from current dir to index folder
+if [ $is_option_a_selected = "true" ]
+then
+    for file_option_a in `ls $index_folder`
+    do
+        cp "$file_option_a" "$index_folder/$file_option_a"
+    done
+fi
+
+# compare index folder files with last commit repo folder files
 if [ $commit_number -gt 0 ] # skip this check if it is the 1st commit
 then
     last_commit_number=$(($commit_number - 1))
@@ -80,3 +89,29 @@ cp -ar "$index_folder/." "$new_commit_folder/."
 # commit message to UI
 echo "Committed as commit $commit_number"
 
+#TODO:
+# condition: empty folder
+# echo 1 > a
+# echo a > b
+# shrug-init
+# Initialized empty shrug repository in .shrug
+# shrug-commit -a -m "initial commit"
+# nothing to commit
+
+#TODO:
+# condition: empty folder
+# echo 1 > a
+# echo a > b
+# shrug-init
+# Initialized empty shrug repository in .shrug
+# shrug-add a b
+# shrug-commit -a -m "first commit"
+# Committed as commit 0
+
+# shrug-commit -a -m "second commit"
+# nothing to commit
+
+# echo q > c
+# shrug-add c
+# shrug-commit -a -m "second commit"
+# Committed as commit 1
