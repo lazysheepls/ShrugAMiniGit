@@ -40,8 +40,6 @@ done
 files=`sort $temp_status_print_file | uniq`
 rm $temp_status_print_file
 
-echo $files
-
 # get status for each file
 for file in $files
 do
@@ -106,21 +104,21 @@ do
     fi
 
     # status: file changed, different changes staged for commit
-    if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_index = "true" ]
+    if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_index = "true" -a $is_file_diff_index_vs_last_commit = "true" ]
     then
         echo "$file - file changed, different changes staged for commit"
         continue
     fi
 
     # status: file changed, changes staged for commit
-    if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_index = "true" ]
+    if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_index = "false" -a $is_file_diff_index_vs_last_commit = "true" ]
     then
-        echo "$file - status: file changed, changes staged for commit"
+        echo "$file - file changed, changes staged for commit"
         continue
     fi
 
     # status: file changed, changes not staged for commit
-    if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_last_commit = "false" ]
+    if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_index = "true" -a $is_file_diff_index_vs_last_commit = "false" ]
     then
         echo "$file - file changed, changes not staged for commit"
         continue
@@ -141,7 +139,7 @@ do
     fi
 
     # status: same as repo
-    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_diff_cur_dir_vs_last_commit = "false" ]
+    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "true" -a $is_file_diff_cur_dir_vs_last_commit = "false" ]
     then
         echo "$file - same as repo"
         continue
