@@ -1,0 +1,216 @@
+#!/bin/dash
+
+#init
+index_folder=".shrug/index"
+log_file=".shrug/repo/shrug.log"
+last_commit_number=0
+last_commit_folder=""
+commit_branch="master"
+temp_status_print_file=".shrug/repo/status_print.temp"
+files=$@
+
+# error: shrug repository does not exist
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-status: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
+# scan files from current directory
+for file in `ls`
+do
+    echo $file >> $temp_status_print_file
+done
+
+# scan files from index
+for file in `ls $index_folder`
+do
+    echo $file >> $temp_status_print_file
+done
+
+# scan files from last commit
+last_commit_number=`cat $log_file | tail -n1 | cut -d" " -f1`
+last_commit_folder=".shrug/repo/$commit_branch/$last_commit_number"
+for file in `ls $last_commit_folder`
+do
+    echo $file >> $temp_status_print_file
+done
+
+# remove duplicated file names
+files=`sort $temp_status_print_file | uniq`
+rm $temp_status_print_file
+
+echo $files
+
+# get status for each file
+for file in $files
+do
+    is_file_exist_in_cur_dir="false"
+    is_file_exist_in_index="false"
+    is_file_exist_in_last_commit="false"
+
+    is_file_diff_cur_dir_vs_last_commit="false"
+    is_file_diff_cur_dir_vs_index="false"
+    is_file_diff_index_vs_last_commit="false"
+    
+    # check if file exist in current dir
+    if [ -e $file ]
+    then
+        is_file_exist_in_cur_dir="true"
+    fi
+
+    # check if file exist in index
+    if [ -e "$index_folder/$file" ]
+    then
+        is_file_exist_in_index="true"
+    fi
+
+    # check if file exist in last commit
+    if [ -e "$last_commit_folder/$file" ]
+    then
+        is_file_exist_in_last_commit="true"
+    fi
+
+    # check file difference between current directory and last commit folder
+    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_last_commit = "true" ]
+    then
+        if ! cmp -s "$file" "$last_commit_folder/$file"
+        then
+            is_file_diff_cur_dir_vs_last_commit="true"
+        fi
+    fi
+
+    # check file difference between current directory and index folder
+    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "true" ]
+    then
+        if ! cmp -s "$file" "$index_folder/$file"
+        then
+            is_file_diff_cur_dir_vs_index="true"
+        fi
+    fi
+
+    # check file difference between index folder and last commit folder
+    if [ $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "true" ]
+    then
+        if ! cmp -s "$index_folder/$file" "$last_commit_folder/$file"
+        then
+            is_file_diff_index_vs_last_commit="true"
+        fi
+    fi
+
+    # check if file is changed
+    is_file_changed="false"
+    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_last_commit = "true" -a $is_file_diff_cur_dir_vs_last_commit = "true" ]
+    then
+        is_file_changed="true"
+    fi
+
+    # status: file changed, different changes staged for commit
+    if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_index = "true" ]
+    then
+        echo "$file - file changed, different changes staged for commit"
+        continue
+    fi
+
+    # status: file changed, changes staged for commit
+    if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_index = "true" ]
+    then
+        echo "$file - status: file changed, changes staged for commit"
+        continue
+    fi
+
+    # status: file changed, changes not staged for commit
+    if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_last_commit = "false" ]
+    then
+        echo "$file - file changed, changes not staged for commit"
+        continue
+    fi
+
+    # status: file deleted
+    if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "true" ]
+    then
+        echo "$file - file deleted"
+        continue
+    fi
+
+    # status: deleted
+    if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "false" -a $is_file_exist_in_last_commit = "true" ]
+    then
+        echo "$file - deleted"
+        continue
+    fi
+
+    # status: same as repo
+    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_diff_cur_dir_vs_last_commit = "false" ]
+    then
+        echo "$file - same as repo"
+        continue
+    fi
+
+    # status: added to index
+    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "true" -a $is_file_diff_cur_dir_vs_index = "false" -a $is_file_exist_in_last_commit = "false" ]
+    then
+        echo "$file - added to index"
+        continue
+    fi
+
+    # status: untracked
+    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "false" -a $is_file_exist_in_last_commit = "false" ]
+    then
+        echo "$file - untracked"
+        continue
+    fi
+done
+
+#Note:
+# No error checking for input arguments
+# 1. scan cur dir/ scan index / scan reach commit folder in repo, put into a temp file
+# 2. remove duplicated file and sort in alphabetical order
+# 3. process each file, check current status with last commit status
+# 4. print output for both tracked and untracked files
+
+# possible status
+# a - file changed, different changes staged for commit
+# b - file changed, changes staged for commit
+# c - file changed, changes not staged for commit
+# d - file deleted
+# e - deleted
+# f - same as repo
+# g - added to index
+# h - untracked
+# shrug-add - untracked
+# shrug-commit - untracked
+# shrug-init - untracked
+# shrug-rm - untracked
+# shrug-status - untracked
+
+
+#TODO: file changed
+# file exist in cur dir, file was in last commit, file in current dir is different from last commit
+
+#TODO: file deleted
+# file does not exist in cur dir, file exist in index, file was in last commit
+
+#TODO: deleted
+# file does not exist in cur dir, file does not exist in index, file was in last commit
+
+#TODO: same as repo
+# file exist in cur dir, file is the same as last commit
+
+#TODO: add to index
+# file exist in cur dir, file is the same as index, file does not exist in last commit
+
+#TODO: untracked
+# file exist in cur dir, file is not in index, file is not in last commit
+
+#TODO: changes not staged for commit
+# file changed + 
+# file in index is the same as last commit
+
+#TODO: changed staged for commit
+# file changed +
+# file in cur dir is the same as the one in index
+
+#TODO: different changes staged for commit
+# file changed +
+# file in cur dir is different as the one in index
