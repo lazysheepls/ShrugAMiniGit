@@ -16,7 +16,15 @@ then
     exit 1
 fi
 
+# error: repository does not have any commits yet
+if [ -z "`cat .shrug/repo/shrug.log`" ]
+then
+    echo "shrug-status: error: your repository does not have any commits yet"
+    exit 1
+fi
+
 # scan files from current directory
+touch $temp_status_print_file
 for file in `ls`
 do
     echo $file >> $temp_status_print_file
@@ -36,6 +44,13 @@ do
     echo $file >> $temp_status_print_file
 done
 
+# check if there is any file name that needs to display status, if not, exit
+if [ -z "`cat $temp_status_print_file`" ]
+then
+    exit 0
+fi
+
+# fi
 # remove duplicated file names
 files=`sort $temp_status_print_file | uniq`
 rm $temp_status_print_file
@@ -103,6 +118,20 @@ do
         is_file_changed="true"
     fi
 
+    # check if file is added to index
+    is_file_added_to_index="false"
+    if [ $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "false" ]
+    then
+        is_file_added_to_index="true"
+    fi
+
+    # check if file is deleted
+    is_file_deleted="false"
+    if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "true" ]
+    then
+        is_file_deleted="true"
+    fi
+
     # status: file changed, different changes staged for commit
     if [ $is_file_changed = "true" -a $is_file_diff_cur_dir_vs_index = "true" -a $is_file_diff_index_vs_last_commit = "true" ]
     then
@@ -124,12 +153,47 @@ do
         continue
     fi
 
+    # # status: added to index
+    # if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "true" -a $is_file_diff_cur_dir_vs_index = "false" -a $is_file_exist_in_last_commit = "false" ]
+    # then
+    #     echo "$file - added to index"
+    #     continue
+    # fi
+
+    # status: added to index, file changed
+    if [ $is_file_added_to_index = "true" -a $is_file_changed = "true" ]
+    then
+        echo "$file - added to index, file changed"
+        continue
+    fi
+
+    # status: added to index, file deleted
+    if [ $is_file_added_to_index = "true" -a $is_file_deleted = "true" ]
+    then
+        echo "$file - added to index, file deleted"
+        continue
+    fi   
+
+    # status: added to index
+    if [ $is_file_added_to_index = "true" ]
+    then
+        echo "$file - added to index"
+        continue
+    fi
+
     # status: file deleted
-    if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "true" ]
+    if [ $is_file_deleted = "true" ]
     then
         echo "$file - file deleted"
         continue
-    fi
+    fi   
+
+    # # status: file deleted
+    # if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "true" ]
+    # then
+    #     echo "$file - file deleted"
+    #     continue
+    # fi
 
     # status: deleted
     if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "false" -a $is_file_exist_in_last_commit = "true" ]
@@ -145,15 +209,9 @@ do
         continue
     fi
 
-    # status: added to index
-    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "true" -a $is_file_diff_cur_dir_vs_index = "false" -a $is_file_exist_in_last_commit = "false" ]
-    then
-        echo "$file - added to index"
-        continue
-    fi
-
     # status: untracked
-    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "false" -a $is_file_exist_in_last_commit = "false" ]
+    # if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "false" -a $is_file_exist_in_last_commit = "false" ]
+    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "false" ]
     then
         echo "$file - untracked"
         continue

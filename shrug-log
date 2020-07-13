@@ -25,6 +25,7 @@ fi
 log_file=".shrug/repo/shrug.log"
 temp_log_print_file=".shrug/repo/log_print.temp"
 
+touch $temp_log_print_file
 cut -d" " --complement -f2 $log_file > $temp_log_print_file # remove branch name from each line
 
 tac $temp_log_print_file
