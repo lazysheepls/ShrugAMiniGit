@@ -50,7 +50,6 @@ then
     exit 0
 fi
 
-# fi
 # remove duplicated file names
 files=`sort $temp_status_print_file | uniq`
 rm $temp_status_print_file
@@ -111,11 +110,23 @@ do
         fi
     fi
 
-    # check if file is changed
+    # status: same as repo
+    # what is file changed? file exist in last commit, and file was changed either in index or in current directory
     is_file_changed="false"
-    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_last_commit = "true" -a $is_file_diff_cur_dir_vs_last_commit = "true" ]
+    if [ $is_file_exist_in_cur_dir = "true" \
+        -a $is_file_exist_in_index = "true" \
+        -a $is_file_exist_in_last_commit = "true" \
+        -a $is_file_diff_cur_dir_vs_index = "false" \
+        -a $is_file_diff_cur_dir_vs_last_commit = "false" \
+        -a $is_file_diff_index_vs_last_commit = "false" ]
     then
-        is_file_changed="true"
+        echo "$file - same as repo"
+        continue
+    else
+        if [ $is_file_exist_in_last_commit = "true" ]
+        then
+            is_file_changed="true"
+        fi
     fi
 
     # check if file is added to index
@@ -125,11 +136,11 @@ do
         is_file_added_to_index="true"
     fi
 
-    # check if file is deleted
-    is_file_deleted="false"
-    if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "true" ]
+    # check if file is deleted from current directory
+    is_file_deleted_from_cur_dir="false"
+    if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "true" ]
     then
-        is_file_deleted="true"
+        is_file_deleted_from_cur_dir="true"
     fi
 
     # status: file changed, different changes staged for commit
@@ -153,22 +164,15 @@ do
         continue
     fi
 
-    # # status: added to index
-    # if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "true" -a $is_file_diff_cur_dir_vs_index = "false" -a $is_file_exist_in_last_commit = "false" ]
-    # then
-    #     echo "$file - added to index"
-    #     continue
-    # fi
-
     # status: added to index, file changed
-    if [ $is_file_added_to_index = "true" -a $is_file_changed = "true" ]
+    if [ $is_file_added_to_index = "true" -a $is_file_diff_cur_dir_vs_index = "true" ]
     then
         echo "$file - added to index, file changed"
         continue
     fi
 
     # status: added to index, file deleted
-    if [ $is_file_added_to_index = "true" -a $is_file_deleted = "true" ]
+    if [ $is_file_added_to_index = "true" -a $is_file_deleted_from_cur_dir = "true" ]
     then
         echo "$file - added to index, file deleted"
         continue
@@ -182,18 +186,11 @@ do
     fi
 
     # status: file deleted
-    if [ $is_file_deleted = "true" ]
+    if [ $is_file_deleted_from_cur_dir = "true" ]
     then
         echo "$file - file deleted"
         continue
-    fi   
-
-    # # status: file deleted
-    # if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "true" ]
-    # then
-    #     echo "$file - file deleted"
-    #     continue
-    # fi
+    fi
 
     # status: deleted
     if [ $is_file_exist_in_cur_dir = "false" -a $is_file_exist_in_index = "false" -a $is_file_exist_in_last_commit = "true" ]
@@ -202,71 +199,10 @@ do
         continue
     fi
 
-    # status: same as repo
-    if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "true" -a $is_file_exist_in_last_commit = "true" -a $is_file_diff_cur_dir_vs_last_commit = "false" ]
-    then
-        echo "$file - same as repo"
-        continue
-    fi
-
     # status: untracked
-    # if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "false" -a $is_file_exist_in_last_commit = "false" ]
     if [ $is_file_exist_in_cur_dir = "true" -a $is_file_exist_in_index = "false" ]
     then
         echo "$file - untracked"
         continue
     fi
 done
-
-#Note:
-# No error checking for input arguments
-# 1. scan cur dir/ scan index / scan reach commit folder in repo, put into a temp file
-# 2. remove duplicated file and sort in alphabetical order
-# 3. process each file, check current status with last commit status
-# 4. print output for both tracked and untracked files
-
-# possible status
-# a - file changed, different changes staged for commit
-# b - file changed, changes staged for commit
-# c - file changed, changes not staged for commit
-# d - file deleted
-# e - deleted
-# f - same as repo
-# g - added to index
-# h - untracked
-# shrug-add - untracked
-# shrug-commit - untracked
-# shrug-init - untracked
-# shrug-rm - untracked
-# shrug-status - untracked
-
-
-#TODO: file changed
-# file exist in cur dir, file was in last commit, file in current dir is different from last commit
-
-#TODO: file deleted
-# file does not exist in cur dir, file exist in index, file was in last commit
-
-#TODO: deleted
-# file does not exist in cur dir, file does not exist in index, file was in last commit
-
-#TODO: same as repo
-# file exist in cur dir, file is the same as last commit
-
-#TODO: add to index
-# file exist in cur dir, file is the same as index, file does not exist in last commit
-
-#TODO: untracked
-# file exist in cur dir, file is not in index, file is not in last commit
-
-#TODO: changes not staged for commit
-# file changed + 
-# file in index is the same as last commit
-
-#TODO: changed staged for commit
-# file changed +
-# file in cur dir is the same as the one in index
-
-#TODO: different changes staged for commit
-# file changed +
-# file in cur dir is different as the one in index
