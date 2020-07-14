@@ -105,10 +105,3 @@ cp -ar "$index_folder/." "$new_commit_folder/."
 
 # commit message to UI
 echo "Committed as commit $commit_number"
-
-#TODO:(handle duplicated input arguments)
-# touch a b c
-# shrug-add a b a c b
-# a b c added to index with no error (no message)
-# shrug-commit a b a c b
-# Commited as commit 0 (no error)

@@ -2,6 +2,8 @@
 
 # init
 index_folder=".shrug/index"
+temp_add_print_file=".shrug/repo/add_print.temp"
+files=$@
 
 # error: shrug repository does not exist
 if [ ! -e ".shrug" ]
@@ -17,8 +19,17 @@ then
     exit 1
 fi
 
+# remove duplicated file names
+touch $temp_add_print_file
+for file in $files
+do
+    echo $file >> $temp_add_print_file
+done
+files=`sort $temp_add_print_file | uniq`
+rm $temp_add_print_file
+
 # loop through <filenames>
-for file in $@
+for file in $files
 do
     # error: invalid file name
     echo $file | grep -P -q "^[a-zA-Z0-9]+[.|-|_]*"
@@ -43,8 +54,3 @@ do
         cp $file $index_folder
     fi
 done
-
-#TODO:(handle duplicated input arguments)
-# touch a b c
-# shrug-add a b a c b
-# a b c added to index with no error (no message)
