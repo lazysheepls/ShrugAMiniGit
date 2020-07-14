@@ -17,7 +17,7 @@ Date    Start	    Stop	        Activity	            Comments
 13/7/20 21:00pm     23:34pm         coding and debugging    - Added shrug-status
                                                             - Fixed a bug in shrug-add where file removal from current directory was not considered
 
-14/7/20 8:20pm      23:20pm         debugging               - Fixed a bug in shrug-status where the "file changed" status has the wrong conditions
+14/7/20 8:20pm      23:56pm         debugging               - Fixed a bug in shrug-status where the "file changed" status has the wrong conditions
                                                             - Fixed a bug in shrug-status where the "file added to index, file changed" status is missing
                                                             - Fixed a bug in shrug-status where the "file added to index, file deleted" status is missing
                                                             - Fixed a bug in shrug-add where duplicated file names should be ignored
