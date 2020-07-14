@@ -1,0 +1,23 @@
+Date    Start	    Stop	        Activity	            Comments
+8/7/20  20:20pm     01:14am(+1)     coding                  - Added shrug-init
+                                                            - Added shrug-add
+                                                            - Added useage info for shrug-commit
+                                                                
+9/7/20  20:45pm     01:56am(+1)     coding and debugging    - Continue adding shrug-commit
+                                                            - Added "nothing to commit" message for shrug-commit
+                                                            - Added shrug-log
+                                                            - Created shrug-show, and define expected behaviour by testing with "2041 shrug-show"
+
+12/7/20 13:04pm     01:34am(+1)     coding and debugging    - Continue coding shrug-show
+                                                            - Debugging shrug-commit and fixed a bug where file compare should not only look at the modifed date
+                                                            - Passed auto test subset 0
+                                                            - Adding option [-a] for shrug-commit
+                                                            - Added shrug-rm
+
+13/7/20 21:00pm     23:34pm         coding and debugging    - Added shrug-status
+                                                            - Fixed a bug in shrug-add where file removal from current directory was not considered
+
+14/7/20 8:20pm      23:20pm         debugging               - Fixed a bug in shrug-status where the "file changed" status has the wrong conditions
+                                                            - Fixed a bug in shrug-status where the "file added to index, file changed" status is missing
+                                                            - Fixed a bug in shrug-status where the "file added to index, file deleted" status is missing
+                                                            - Fixed a bug in shrug-add where duplicated file names should be ignored
